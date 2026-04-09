@@ -1,34 +1,79 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+@import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'JetBrains Mono', monospace;
+  background: #050505;
+  color: #FFFFFF;
+  overflow-x: hidden;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.App {
+  min-height: 100vh;
+  background: #050505;
 }
 
-.App-link {
-    color: #61dafb;
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 42, 42, 0.5);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 42, 42, 0.8);
+}
+
+/* Leaflet overrides for dark theme */
+.leaflet-container {
+  background: #050505;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #111111;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaflet-popup-tip {
+  background: #111111;
+}
+
+/* Pulse animation for fire markers */
+@keyframes pulse-red {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.fire-marker {
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+/* Glow effect */
+.glow-red {
+  box-shadow: 0 0 20px rgba(255, 42, 42, 0.5);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px rgba(42, 102, 255, 0.5);
 }
