@@ -1,0 +1,84 @@
+{
+  "theme": "dark",
+  "archetype": "Archetype 4 (Swiss & High-Contrast / Tactical Command Center)",
+  "color_palette": {
+    "background": "#050505",
+    "surface": "#111111",
+    "surface_elevated": "#1A1A1A",
+    "primary": "#FF2A2A", 
+    "secondary": "#2A66FF",
+    "border": "rgba(255, 255, 255, 0.1)",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "rgba(255, 255, 255, 0.6)",
+    "accent_glow": "rgba(255, 42, 42, 0.5)"
+  },
+  "typography": {
+    "heading_font": "Chivo",
+    "body_font": "JetBrains Mono",
+    "scales": {
+      "h1": "text-3xl md:text-4xl tracking-tighter font-black",
+      "h2": "text-xl md:text-2xl tracking-tight font-bold",
+      "h3": "text-lg md:text-xl tracking-tight font-semibold",
+      "body": "text-sm md:text-base leading-relaxed font-normal",
+      "small": "text-xs tracking-[0.1em] uppercase font-semibold"
+    }
+  },
+  "layout_spacing": {
+    "container": "p-4 md:p-6",
+    "grid": "grid grid-cols-1 md:grid-cols-4 md:grid-rows-[minmax(300px,_auto)_minmax(300px,_auto)] gap-4 md:gap-6",
+    "card": "p-4 md:p-6 rounded-lg",
+    "radius": "rounded-md"
+  },
+  "components": {
+    "map": {
+      "library": "react-leaflet",
+      "tiles": "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      "description": "Real-time geospatial map of India spanning 2 columns and 2 rows. Use dark tiles. Add pulsing red markers for live fires."
+    },
+    "cards": {
+      "style": "bg-[#111111] border border-white/10 rounded-lg shadow-2xl relative overflow-hidden",
+      "hover": "hover:border-white/20 transition-colors"
+    },
+    "forms": {
+      "inputs": "bg-black border border-white/20 focus:border-[#2A66FF] focus:ring-1 focus:ring-[#2A66FF] text-white rounded-md p-2 w-full",
+      "buttons": {
+        "primary": "bg-[#FF2A2A] hover:bg-[#E60000] text-white font-bold tracking-wide transition-all rounded px-4 py-2",
+        "secondary": "bg-[#2A66FF] hover:bg-[#0044FF] text-white font-bold tracking-wide transition-all rounded px-4 py-2"
+      }
+    },
+    "live_feed": {
+      "style": "flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar",
+      "item": "p-3 bg-white/5 border border-white/10 rounded border-l-2 border-l-[#FF2A2A]"
+    }
+  },
+  "motion": {
+    "hover": "transition-all duration-200 ease-out",
+    "pulse": "animate-pulse (for live map markers)",
+    "entrance": "framer-motion staggered fade-in up for dashboard widgets"
+  },
+  "media": {
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1619545662148-057fb83d5e32?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTZ8MHwxfHNlYXJjaHwyfHxmb3Jlc3QlMjBmaXJlJTIwZGFya3xlbnwwfHx8fDE3NzU3MTQ5MDl8MA&ixlib=rb-4.1.0&q=85",
+        "category": "background_texture",
+        "description": "Subtle low-opacity background for auth or landing sections"
+      }
+    ],
+    "icons": {
+      "library": "lucide-react",
+      "style": "stroke-2"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Build a 4-column bento grid dashboard layout. The Map component should span at least 2 columns and 2 rows (e.g., col-span-1 md:col-span-2 row-span-2).",
+    "Strictly adhere to the dark theme requested: Use Black (#050505) base with Red (#FF2A2A) and Blue (#2A66FF) accents.",
+    "Do NOT use pure white backgrounds anywhere.",
+    "Use react-leaflet with CartoDB Dark Matter tiles (URL provided) and center on India (lat: 20.5937, lng: 78.9629, zoom: 4). Ensure you install leaflet and react-leaflet.",
+    "Implement the Fire Prediction Form (inputs: longitude, latitude, wind speed, vegetation index). Display results with a glowing chart or high-contrast typography.",
+    "Implement Report Fire Incident Form inside a card.",
+    "Implement Live Fire Incidents Feed as a scrolling list with pulsing red status indicators.",
+    "Implement Historical Fire Data using Recharts (Line/Bar) with a red-to-blue gradient.",
+    "Add 'data-testid' to all interactive elements for testing.",
+    "Install and use Chivo and JetBrains Mono fonts."
+  ]
+}
