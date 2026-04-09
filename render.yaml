@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: fire-prediction-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGO_URL
+        value: mongodb+srv://fire_admin:mehak%405304@fire-prediction-cluster.a5xulg0.mongodb.net/?appName=fire-prediction-cluster
+      - key: DB_NAME
+        value: fire_prediction_db
+      - key: CORS_ORIGINS
+        sync: false
+    autoDeploy: true
+    healthCheckPath: /api/

@@ -66,7 +66,7 @@ Complete step-by-step guide to deploy your Fire Prediction System to Render (Bac
    - Push your code:
    ```bash
    cd /app
-   git init
+   git initt
    git add .
    git commit -m "Initial commit - Fire Prediction System"
    git branch -M main
