@@ -216,6 +216,28 @@ const PredictionForm = () => {
               </div>
             )}
           </div>
+
+          {result.email_sent && (
+            <div 
+              className="mt-3 p-3 rounded flex items-center gap-3"
+              style={{ 
+                background: 'rgba(42, 102, 255, 0.15)',
+                border: '1px solid #2A66FF'
+              }}
+              data-testid="email-alert-banner"
+            >
+              <div className="p-2 rounded-full" style={{ background: 'rgba(42, 102, 255, 0.3)' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A66FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2"/>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: '#2A66FF' }}>EMAIL ALERT SENT</p>
+                <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Fire risk alert sent to admin email</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
