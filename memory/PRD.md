@@ -28,16 +28,17 @@ Build a fire prediction system where we give the coordinates of longitude, latit
 
 ## What's Been Implemented (April 2026)
 - [x] FastAPI backend with Random Forest fire prediction model
-- [x] MongoDB Atlas integration with SSL/TLS
+- [x] MongoDB Atlas integration with SSL/TLS (certifi)
 - [x] Fire prediction API endpoint (/api/predict)
 - [x] Report fire incident API (/api/report-fire)
 - [x] Live fires API (/api/fires/live)
 - [x] Historical data API (/api/fires/historical)
 - [x] WebSocket real-time updates (/api/ws/fires)
-- [x] Background task for synthetic fire data generation
+- [x] **NASA FIRMS real satellite data** (VIIRS SNPP for India, 11,000+ fire detections)
+- [x] **Resend email alerts** for Medium/High risk fire predictions
 - [x] React dashboard with bento grid layout
 - [x] Interactive Leaflet map centered on India
-- [x] Fire prediction form with result display
+- [x] Fire prediction form with result display + email alert indicator
 - [x] Report incident form
 - [x] Live feed with real-time updates
 - [x] Historical chart with bar/line toggle
