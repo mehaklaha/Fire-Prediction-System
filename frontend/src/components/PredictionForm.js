@@ -209,6 +209,12 @@ const PredictionForm = () => {
               <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Prediction:</span>
               <span className="font-bold">{result.prediction === 1 ? 'FIRE RISK DETECTED' : 'NO FIRE RISK'}</span>
             </div>
+            {result.email_sent && (
+              <div className="flex justify-between">
+                <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Email Alert:</span>
+                <span className="font-bold" style={{ color: '#2A66FF' }}>SENT TO ADMIN</span>
+              </div>
+            )}
           </div>
         </div>
       )}

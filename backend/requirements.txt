@@ -1,7 +1,7 @@
 fastapi==0.110.1
 uvicorn==0.25.0
-motor>=3.3.1
-pymongo[srv]>=4.8.0
+motor==3.7.0
+pymongo[srv]==4.10.1
 pydantic>=2.6.4
 python-dotenv>=1.0.1
 scikit-learn>=1.8.0
@@ -18,3 +18,4 @@ certifi>=2024.0.0
 dnspython>=2.6.0
 PyOpenSSL>=23.0.0
 cryptography>=42.0.0
+resend>=2.0.0

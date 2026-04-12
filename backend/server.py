@@ -16,6 +16,9 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 import requests
 import json
+import csv
+import io
+import resend
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -24,6 +27,14 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
 db = client[os.environ['DB_NAME']]
+
+# Resend setup
+resend.api_key = os.environ.get('RESEND_API_KEY', '')
+ALERT_EMAIL = os.environ.get('ALERT_EMAIL', '')
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
+
+# NASA FIRMS API
+NASA_FIRMS_MAP_KEY = os.environ.get('NASA_FIRMS_MAP_KEY', '')
 
 # Create the main app
 app = FastAPI(title="Fire Prediction System API")
@@ -44,33 +55,24 @@ active_connections: List[WebSocket] = []
 # Train and save a simple Random Forest model
 def create_fire_prediction_model():
     """Create and train a Random Forest model for fire prediction"""
-    # Synthetic training data (latitude, longitude, wind_speed, vegetation_index)
-    # Features: [lat, lon, wind_speed, veg_index]
-    # Label: 1 = fire risk, 0 = no fire risk
     np.random.seed(42)
     
-    # Generate synthetic training data
     X_train = np.random.rand(1000, 4)
-    # Scale features to realistic ranges
-    X_train[:, 0] = X_train[:, 0] * 35 + 5  # lat: 5-40
-    X_train[:, 1] = X_train[:, 1] * 48 + 54  # lon: 54-102
-    X_train[:, 2] = X_train[:, 2] * 50  # wind_speed: 0-50 km/h
-    X_train[:, 3] = X_train[:, 3]  # veg_index: 0-1
+    X_train[:, 0] = X_train[:, 0] * 35 + 5
+    X_train[:, 1] = X_train[:, 1] * 48 + 54
+    X_train[:, 2] = X_train[:, 2] * 50
+    X_train[:, 3] = X_train[:, 3]
     
-    # Create labels based on some rules
     y_train = np.zeros(1000)
     for i in range(1000):
-        # High wind speed, low vegetation index = higher fire risk
         if X_train[i, 2] > 25 and X_train[i, 3] < 0.3:
             y_train[i] = 1
-        # Medium conditions
         elif X_train[i, 2] > 15 and X_train[i, 3] < 0.5:
             y_train[i] = np.random.choice([0, 1], p=[0.6, 0.4])
     
     model = RandomForestClassifier(n_estimators=100, random_state=42)
     model.fit(X_train, y_train)
     
-    # Save model
     model_path = ROOT_DIR / 'fire_model.pkl'
     with open(model_path, 'wb') as f:
         pickle.dump(model, f)
@@ -91,7 +93,92 @@ except Exception as e:
     logger.error(f"Error loading model: {e}")
     fire_model = create_fire_prediction_model()
 
-# Pydantic Models
+# ==================== EMAIL ALERT ====================
+
+async def send_fire_alert_email(prediction_data: dict):
+    """Send email alert when high-risk fire is predicted"""
+    if not resend.api_key or resend.api_key == 'placeholder_add_key' or not ALERT_EMAIL:
+        logger.warning("Resend API key or alert email not configured. Skipping email alert.")
+        return
+
+    risk_color = "#FF2A2A" if prediction_data["risk_level"] == "High" else "#FFA500"
+    
+    html_content = f"""
+    <div style="font-family: 'Courier New', monospace; background: #050505; color: #FFFFFF; padding: 30px; max-width: 600px; margin: 0 auto;">
+        <div style="border-bottom: 2px solid {risk_color}; padding-bottom: 15px; margin-bottom: 20px;">
+            <h1 style="color: {risk_color}; margin: 0; font-size: 24px;">FIRE RISK ALERT</h1>
+            <p style="color: #888; margin: 5px 0 0 0; font-size: 12px;">Fire Prediction System - Automated Alert</p>
+        </div>
+        
+        <div style="background: #111111; border: 1px solid #333; border-left: 4px solid {risk_color}; padding: 20px; margin-bottom: 20px;">
+            <h2 style="color: {risk_color}; margin: 0 0 15px 0; font-size: 20px;">
+                {prediction_data["risk_level"].upper()} RISK DETECTED
+            </h2>
+            <table style="width: 100%; color: #FFFFFF; font-size: 14px;">
+                <tr>
+                    <td style="padding: 8px 0; color: #888;">Risk Level:</td>
+                    <td style="padding: 8px 0; font-weight: bold; color: {risk_color};">{prediction_data["risk_level"]}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #888;">Probability:</td>
+                    <td style="padding: 8px 0; font-weight: bold;">{prediction_data["probability"]*100:.1f}%</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #888;">Latitude:</td>
+                    <td style="padding: 8px 0;">{prediction_data["latitude"]}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #888;">Longitude:</td>
+                    <td style="padding: 8px 0;">{prediction_data["longitude"]}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #888;">Wind Speed:</td>
+                    <td style="padding: 8px 0;">{prediction_data["wind_speed"]} km/h</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #888;">Vegetation Index:</td>
+                    <td style="padding: 8px 0;">{prediction_data["vegetation_index"]}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #888;">Timestamp:</td>
+                    <td style="padding: 8px 0;">{prediction_data["timestamp"]}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div style="background: #111111; border: 1px solid #333; padding: 15px; margin-bottom: 20px;">
+            <p style="color: #888; font-size: 12px; margin: 0;">
+                Google Maps: 
+                <a href="https://www.google.com/maps?q={prediction_data["latitude"]},{prediction_data["longitude"]}" 
+                   style="color: #2A66FF;">View Location</a>
+            </p>
+        </div>
+        
+        <div style="border-top: 1px solid #333; padding-top: 15px;">
+            <p style="color: #666; font-size: 11px; margin: 0;">
+                This is an automated alert from the Fire Prediction System.
+                Please take necessary precautions if this area is near your jurisdiction.
+            </p>
+        </div>
+    </div>
+    """
+
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [ALERT_EMAIL],
+            "subject": f"[FIRE ALERT] {prediction_data['risk_level'].upper()} Risk at ({prediction_data['latitude']:.4f}, {prediction_data['longitude']:.4f})",
+            "html": html_content
+        }
+        email = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Fire alert email sent to {ALERT_EMAIL}, email_id: {email.get('id', 'N/A')}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send fire alert email: {e}")
+        return False
+
+# ==================== PYDANTIC MODELS ====================
+
 class FirePredictionInput(BaseModel):
     latitude: float = Field(..., ge=-90, le=90, description="Latitude coordinate")
     longitude: float = Field(..., ge=-180, le=180, description="Longitude coordinate")
@@ -107,6 +194,7 @@ class FirePredictionResponse(BaseModel):
     wind_speed: float
     vegetation_index: float
     timestamp: str
+    email_sent: Optional[bool] = False
 
 class ReportedFire(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -139,7 +227,8 @@ class LiveFire(BaseModel):
     satellite: Optional[str] = None
     frp: Optional[float] = None
 
-# API Endpoints
+# ==================== API ENDPOINTS ====================
+
 @api_router.get("/")
 async def root():
     return {"message": "Fire Prediction System API", "version": "1.0.0"}
@@ -148,7 +237,6 @@ async def root():
 async def predict_fire(input_data: FirePredictionInput):
     """Predict fire risk based on input parameters"""
     try:
-        # Prepare features for prediction
         features = np.array([[
             input_data.latitude,
             input_data.longitude,
@@ -156,11 +244,9 @@ async def predict_fire(input_data: FirePredictionInput):
             input_data.vegetation_index
         ]])
         
-        # Get prediction
         prediction = fire_model.predict(features)[0]
         probability = fire_model.predict_proba(features)[0][1]
         
-        # Determine risk level
         if probability < 0.3:
             risk_level = "Low"
         elif probability < 0.7:
@@ -168,7 +254,8 @@ async def predict_fire(input_data: FirePredictionInput):
         else:
             risk_level = "High"
         
-        # Store prediction in database
+        timestamp = datetime.now(timezone.utc).isoformat()
+        
         prediction_doc = {
             "latitude": input_data.latitude,
             "longitude": input_data.longitude,
@@ -177,9 +264,14 @@ async def predict_fire(input_data: FirePredictionInput):
             "prediction": int(prediction),
             "probability": float(probability),
             "risk_level": risk_level,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": timestamp
         }
-        await db.predictions.insert_one(prediction_doc)
+        await db.predictions.insert_one({**prediction_doc})
+        
+        # Send email alert for Medium and High risk predictions
+        email_sent = False
+        if risk_level in ("Medium", "High"):
+            email_sent = await send_fire_alert_email(prediction_doc)
         
         return FirePredictionResponse(
             prediction=int(prediction),
@@ -189,7 +281,8 @@ async def predict_fire(input_data: FirePredictionInput):
             longitude=input_data.longitude,
             wind_speed=input_data.wind_speed,
             vegetation_index=input_data.vegetation_index,
-            timestamp=datetime.now(timezone.utc).isoformat()
+            timestamp=timestamp,
+            email_sent=email_sent
         )
     except Exception as e:
         logger.error(f"Prediction error: {e}")
@@ -207,10 +300,8 @@ async def report_fire(fire_data: ReportFireInput):
             reported_by=fire_data.reported_by or "Anonymous"
         )
         
-        # Store in database
-        await db.reported_fires.insert_one(fire_doc.model_dump())
+        await db.reported_fires.insert_one({**fire_doc.model_dump()})
         
-        # Broadcast to WebSocket clients
         await broadcast_fire_update({
             "type": "reported_fire",
             "data": fire_doc.model_dump()
@@ -247,7 +338,6 @@ async def get_historical_fires(days: int = 7):
     try:
         cutoff_date = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
         
-        # Get counts by date
         pipeline = [
             {"$match": {"timestamp": {"$gte": cutoff_date}}},
             {"$group": {
@@ -267,7 +357,8 @@ async def get_historical_fires(days: int = 7):
         logger.error(f"Error fetching historical data: {e}")
         return {"dates": [], "counts": []}
 
-# WebSocket endpoint
+# ==================== WEBSOCKET ====================
+
 @api_router.websocket("/ws/fires")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -276,7 +367,6 @@ async def websocket_endpoint(websocket: WebSocket):
     
     try:
         while True:
-            # Keep connection alive
             data = await websocket.receive_text()
             await websocket.send_json({"type": "pong", "message": "Connection alive"})
     except WebSocketDisconnect:
@@ -297,53 +387,108 @@ async def broadcast_fire_update(message: dict):
             logger.error(f"Error broadcasting: {e}")
             disconnected.append(connection)
     
-    # Remove disconnected clients
     for conn in disconnected:
         if conn in active_connections:
             active_connections.remove(conn)
 
-# Background task to fetch NASA FIRMS data
+# ==================== NASA FIRMS REAL DATA ====================
+
 async def fetch_nasa_firms_data():
-    """Fetch live fire data from NASA FIRMS API"""
-    # Note: NASA FIRMS requires API key registration
-    # For demo purposes, we'll create synthetic live fire data
+    """Fetch live fire data from NASA FIRMS API for India"""
     while True:
         try:
-            # Generate synthetic live fire for India region
-            synthetic_fire = {
-                "id": str(uuid.uuid4()),
-                "latitude": np.random.uniform(8, 35),
-                "longitude": np.random.uniform(68, 97),
-                "brightness": np.random.uniform(300, 400),
-                "confidence": np.random.choice(["low", "nominal", "high"]),
-                "acq_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-                "acq_time": datetime.now(timezone.utc).strftime("%H:%M"),
-                "satellite": np.random.choice(["NOAA-20", "Suomi-NPP", "Terra"]),
-                "frp": np.random.uniform(10, 100)
-            }
+            if NASA_FIRMS_MAP_KEY:
+                # Fetch real data from NASA FIRMS API - VIIRS SNPP for India bounding box, last 1 day
+                # India bounding box: West=68, South=6, East=97, North=36
+                url = f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/{NASA_FIRMS_MAP_KEY}/VIIRS_SNPP_NRT/68,6,97,36/2"
+                logger.info(f"Fetching NASA FIRMS data for India...")
+                
+                response = await asyncio.to_thread(requests.get, url, timeout=30)
+                
+                if response.status_code == 200 and response.text and not response.text.startswith("Invalid"):
+                    reader = csv.DictReader(io.StringIO(response.text))
+                    new_fires = []
+                    
+                    satellite_map = {"N": "Suomi-NPP", "1": "NOAA-20", "2": "NOAA-21"}
+                    
+                    for row in reader:
+                        try:
+                            sat_code = row.get("satellite", "N")
+                            fire = {
+                                "id": str(uuid.uuid4()),
+                                "latitude": float(row.get("latitude", 0)),
+                                "longitude": float(row.get("longitude", 0)),
+                                "brightness": float(row.get("bright_ti4", 0)),
+                                "confidence": {"h": "high", "n": "nominal", "l": "low"}.get(row.get("confidence", "n"), "nominal"),
+                                "acq_date": row.get("acq_date", datetime.now(timezone.utc).strftime("%Y-%m-%d")),
+                                "acq_time": row.get("acq_time", "0000"),
+                                "satellite": satellite_map.get(sat_code, sat_code),
+                                "frp": float(row.get("frp", 0))
+                            }
+                            new_fires.append(fire)
+                        except (ValueError, KeyError) as e:
+                            continue
+                    
+                    if new_fires:
+                        # Clear old live fires and insert new batch
+                        await db.live_fires.delete_many({})
+                        # Insert copies to avoid _id mutation
+                        docs_to_insert = [{**f} for f in new_fires]
+                        await db.live_fires.insert_many(docs_to_insert)
+                        
+                        logger.info(f"Stored {len(new_fires)} real NASA FIRMS fires for India")
+                        
+                        # Broadcast latest fires to WebSocket clients
+                        for fire in new_fires[:5]:
+                            await broadcast_fire_update({
+                                "type": "live_fire",
+                                "data": fire
+                            })
+                    else:
+                        logger.warning("NASA FIRMS returned no fire data, using fallback")
+                        await generate_synthetic_fire()
+                else:
+                    logger.warning(f"NASA FIRMS API returned status {response.status_code}: {response.text[:200]}")
+                    await generate_synthetic_fire()
+            else:
+                logger.info("No NASA FIRMS key, using synthetic data")
+                await generate_synthetic_fire()
             
-            # Store in database
-            await db.live_fires.insert_one(synthetic_fire)
+            # Fetch every 5 minutes (NASA updates ~every 3 hours, but we check more often)
+            await asyncio.sleep(300)
             
-            # Broadcast to connected clients
-            await broadcast_fire_update({
-                "type": "live_fire",
-                "data": synthetic_fire
-            })
-            
-            logger.info(f"Added synthetic live fire at {synthetic_fire['latitude']}, {synthetic_fire['longitude']}")
-            
-            # Wait 30 seconds before next update
-            await asyncio.sleep(30)
         except Exception as e:
             logger.error(f"Error in NASA FIRMS fetch: {e}")
-            await asyncio.sleep(60)
+            await generate_synthetic_fire()
+            await asyncio.sleep(120)
+
+async def generate_synthetic_fire():
+    """Fallback: Generate synthetic fire data for India"""
+    synthetic_fire = {
+        "id": str(uuid.uuid4()),
+        "latitude": float(np.random.uniform(8, 35)),
+        "longitude": float(np.random.uniform(68, 97)),
+        "brightness": float(np.random.uniform(300, 400)),
+        "confidence": np.random.choice(["low", "nominal", "high"]),
+        "acq_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "acq_time": datetime.now(timezone.utc).strftime("%H%M"),
+        "satellite": np.random.choice(["NOAA-20", "Suomi-NPP", "Terra"]),
+        "frp": float(np.random.uniform(10, 100))
+    }
+    
+    doc_to_insert = {**synthetic_fire}
+    await db.live_fires.insert_one(doc_to_insert)
+    await broadcast_fire_update({
+        "type": "live_fire",
+        "data": synthetic_fire
+    })
+
+# ==================== STARTUP / SHUTDOWN ====================
 
 @app.on_event("startup")
 async def startup_event():
     """Start background tasks on startup"""
     logger.info("Starting Fire Prediction System API")
-    # Start NASA FIRMS data fetching in background
     asyncio.create_task(fetch_nasa_firms_data())
 
 @app.on_event("shutdown")
