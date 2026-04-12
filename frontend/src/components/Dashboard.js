@@ -31,8 +31,8 @@ const Dashboard = () => {
   const fetchStats = async () => {
     try {
       const [liveRes, reportedRes] = await Promise.all([
-        axios.get(`${API}/fires/live?limit=1000`),
-        axios.get(`${API}/fires/reported?limit=1000`)
+        axios.get(`${API}/fires/live?limit=1000`, { timeout: 60000 }),
+        axios.get(`${API}/fires/reported?limit=1000`, { timeout: 60000 })
       ]);
 
       setStats({

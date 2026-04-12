@@ -28,11 +28,17 @@ const PredictionForm = () => {
         longitude: parseFloat(formData.longitude),
         wind_speed: parseFloat(formData.wind_speed),
         vegetation_index: parseFloat(formData.vegetation_index)
-      });
+      }, { timeout: 60000 });
 
       setResult(response.data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Prediction failed');
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError('Server is waking up (free tier). Please try again in 30 seconds.');
+      } else if (err.response?.status === 500) {
+        setError(err.response?.data?.detail || 'Server error. Please try again.');
+      } else {
+        setError('Could not reach server. It may be starting up — please retry in 30 seconds.');
+      }
     } finally {
       setLoading(false);
     }

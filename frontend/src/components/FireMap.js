@@ -45,8 +45,8 @@ const FireMap = () => {
   const fetchFires = async () => {
     try {
       const [liveRes, reportedRes] = await Promise.all([
-        axios.get(`${API}/fires/live?limit=200`),
-        axios.get(`${API}/fires/reported?limit=100`)
+        axios.get(`${API}/fires/live?limit=200`, { timeout: 60000 }),
+        axios.get(`${API}/fires/reported?limit=100`, { timeout: 60000 })
       ]);
 
       setLiveFires(liveRes.data);
