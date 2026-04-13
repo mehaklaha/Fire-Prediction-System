@@ -1,0 +1,1475 @@
+
+                                    A Report on
+
+                          FIRE PREDICTION SYSTEM
+
+                    carried out as part of the course
+                       Project Based Learning - 4
+
+                              Submitted by
+                           [Student Name]
+                           [Roll Number]
+                            VI Semester
+
+               in partial fulfilment for the award of the degree of
+                       BACHELOR OF TECHNOLOGY
+                  In Computer Science & Engineering
+
+              Department of Computer Science & Engineering,
+             School of Computer Science and Engineering,
+                     Manipal University Jaipur,
+                          Jan-May 2026
+
+
+Guide Name: ________________________
+Signature of Guide: ________________________
+Date: ________________________
+
+
+================================================================================
+
+                              CERTIFICATE
+
+This is to certify that the project entitled "Fire Prediction System" is a
+bonafide work carried out as PBL-4 End Term Assessment in partial fulfillment
+for the award of the degree of Bachelor of Technology in Computer Science and
+Engineering, by [Student Name] bearing registration number [Reg. No.], during
+the academic semester VI of year 2025-2026.
+
+Place: Manipal University Jaipur, Jaipur
+Name of the project guide: ________________________
+Signature of the project guide: ______________________
+
+
+================================================================================
+
+                           ACKNOWLEDGEMENT
+
+This project would not have been completed without the help, support, comments,
+advice, cooperation and coordination of various people. However, it is
+impossible to thank everyone individually; I am hereby making a humble effort
+to thank some of them.
+
+I acknowledge and express my deepest sense of gratitude to my internal
+supervisor for his/her constant support, guidance, and continuous engagement.
+I highly appreciate the technical comments, suggestions, and criticism during
+the progress of this project titled "Fire Prediction System".
+
+I owe my profound gratitude to Dr. Neha Chaudhary, Head, Department of CSE,
+for her valuable guidance and for facilitating me during my work.
+
+I am also very grateful to all the faculty members and staff for their precious
+support and cooperation during the development of this project.
+
+Finally, I extend my heartfelt appreciation to my classmates for their help
+and encouragement.
+
+Student Name: [Student Name]
+Registration No.: [Registration Number]
+Department of Computer Science and Engineering
+School of Computer Science and Engineering
+Date: _____________
+
+
+================================================================================
+
+                               ABSTRACT
+
+The Fire Prediction System is a full-stack web application designed to predict
+wildfire risk and provide real-time fire monitoring across India using satellite
+data from NASA's Fire Information for Resource Management System (FIRMS). The
+system leverages a pre-trained Random Forest machine learning model that accepts
+four input parameters -- geographic coordinates (latitude and longitude), wind
+speed, and vegetation index (NDVI) -- to classify fire risk as Low, Medium, or
+High with corresponding probability scores.
+
+The backend is built using FastAPI (Python), providing RESTful API endpoints
+for fire prediction, incident reporting, live fire data retrieval, and historical
+analytics. MongoDB Atlas serves as the database for persistent storage of
+predictions, reported incidents, and satellite fire data. Real-time communication
+is enabled through WebSocket connections, allowing live updates to connected
+clients. The system integrates with NASA FIRMS API to fetch real VIIRS
+(Visible Infrared Imaging Radiometer Suite) satellite fire detection data
+covering the Indian subcontinent, processing over 11,000 active fire hotspots.
+
+The frontend is developed using React.js with an interactive geospatial
+dashboard featuring Leaflet maps centered on India, real-time fire visualization,
+and data analytics charts built with Recharts. Automated email alerts are
+dispatched via Resend API when medium or high-risk fires are predicted. The
+system is deployed on Render (backend) and Netlify (frontend), demonstrating a
+production-ready, cloud-native architecture. This project demonstrates the
+application of machine learning, real-time data processing, and modern web
+technologies for environmental monitoring and disaster prevention.
+
+Keywords: Fire Prediction, Machine Learning, Random Forest, NASA FIRMS,
+Real-time Monitoring, WebSocket, FastAPI, React, Geospatial Visualization
+
+
+================================================================================
+
+                          TABLE OF CONTENTS
+
+1.  Introduction .................................................. 1
+2.  Objective of the Project ...................................... 3
+3.  Brief Description of the Project .............................. 4
+4.  Technology Used ................................................ 6
+5.  Hardware Requirements .......................................... 8
+6.  Software Requirements .......................................... 9
+7.  Design Description ............................................. 10
+    7.1  System Architecture Diagram ............................... 10
+    7.2  Flow Chart ................................................ 12
+    7.3  Data Flow Diagrams (DFDs) ................................. 14
+         7.3.1  Level 0 DFD (Context Diagram) ...................... 14
+         7.3.2  Level 1 DFD ........................................ 15
+         7.3.3  Level 2 DFD ........................................ 16
+    7.4  Entity Relationship Diagram ............................... 18
+8.  Project Description ............................................ 20
+    8.1  Database Table Description ................................. 20
+    8.2  File/Database Design ...................................... 22
+    8.3  Input/Output Form Design .................................. 24
+    8.4  API Endpoint Design ....................................... 28
+9.  Working Model .................................................. 30
+    9.1  Machine Learning Model .................................... 30
+    9.2  NASA FIRMS Integration .................................... 32
+    9.3  Email Alert System ........................................ 33
+    9.4  Real-time WebSocket Communication ......................... 34
+10. Testing & Tools Used ........................................... 35
+11. Implementation & Maintenance ................................... 38
+12. Conclusion and Future Work ..................................... 41
+13. Outcome ........................................................ 43
+14. Bibliography ................................................... 44
+
+
+================================================================================
+
+                        1. INTRODUCTION
+
+1.1 Background
+
+Wildfires pose a significant threat to ecosystems, human settlements, and
+economies worldwide. India, with its diverse terrain encompassing tropical
+forests, grasslands, and dry deciduous forests, is particularly vulnerable to
+wildfire incidents. According to the Forest Survey of India (FSI), over 36% of
+India's forest cover is prone to fire incidents [1]. The increasing frequency
+and intensity of wildfires, exacerbated by climate change, deforestation, and
+human activities, necessitate advanced early warning and monitoring systems.
+
+Traditional fire detection methods rely on physical observation towers,
+satellite imagery with significant time delays, and ground-level reporting
+systems. These approaches suffer from delayed response times, limited
+geographic coverage, and dependency on human observation. The integration of
+machine learning with real-time satellite data offers a paradigm shift in fire
+prediction and monitoring capabilities [2].
+
+1.2 Problem Statement
+
+Current fire detection and prediction systems in India face several challenges:
+
+a) Delayed detection: Existing systems often detect fires only after they have
+   spread significantly, reducing the effectiveness of response measures.
+
+b) Limited prediction capability: Most systems focus on detection rather than
+   prediction, missing the opportunity for proactive prevention.
+
+c) Fragmented data sources: Fire-related data from satellites, weather
+   stations, and ground reports exist in silos, preventing holistic analysis.
+
+d) Lack of real-time monitoring: Traditional systems lack real-time
+   visualization and alerting capabilities for stakeholders.
+
+e) Accessibility: Technical fire data is often inaccessible to local fire
+   departments and community responders who need it most.
+
+1.3 Motivation
+
+The motivation for developing the Fire Prediction System stems from the need
+to create an accessible, real-time, and intelligent platform that can:
+
+- Predict wildfire risk before ignition occurs using environmental parameters
+- Integrate real-time satellite data from NASA FIRMS for comprehensive
+  monitoring
+- Provide an intuitive dashboard for non-technical users to interact with
+  complex geospatial data
+- Enable community-driven incident reporting to supplement satellite data
+- Deliver automated alerts to relevant authorities when fire risk is detected
+
+This project addresses the intersection of environmental science, machine
+learning, and web technology to create a practical tool for disaster
+prevention and management.
+
+1.4 Scope of the Project
+
+The Fire Prediction System encompasses:
+
+- Machine learning-based fire risk prediction using Random Forest classifier
+- Real-time satellite fire data integration from NASA FIRMS (VIIRS sensor)
+- Interactive geospatial visualization of fire incidents across India
+- Community-based fire incident reporting system
+- Automated email alert system for high-risk predictions
+- Historical fire data analytics and visualization
+- Full-stack deployment on cloud platforms (Render and Netlify)
+
+The system is designed specifically for the Indian subcontinent (bounding box:
+68E-97E, 6N-36N) but can be extended to other regions.
+
+
+================================================================================
+
+                    2. OBJECTIVE OF THE PROJECT
+
+The primary objectives of the Fire Prediction System are:
+
+Objective 1: Develop a Machine Learning-based Fire Risk Prediction Model
+   - Train a Random Forest classifier using environmental parameters
+     (latitude, longitude, wind speed, vegetation index)
+   - Achieve multi-class risk classification (Low, Medium, High)
+   - Provide probability scores for each prediction
+
+Objective 2: Integrate Real-time Satellite Fire Data
+   - Connect with NASA FIRMS API to fetch VIIRS satellite fire detections
+   - Process and store satellite fire data for the Indian subcontinent
+   - Update fire data periodically (every 5 minutes)
+
+Objective 3: Build an Interactive Geospatial Dashboard
+   - Create a dark-themed command center interface
+   - Implement real-time map visualization with Leaflet.js
+   - Display live fire markers, reported incidents, and statistics
+
+Objective 4: Implement Fire Incident Reporting System
+   - Allow users to report fire incidents with location and description
+   - Store reports in MongoDB with geospatial indexing
+   - Integrate reported incidents with the live fire feed
+
+Objective 5: Develop Automated Alert System
+   - Send email notifications via Resend API for high-risk predictions
+   - Include location details, risk level, and Google Maps links
+   - Ensure reliable delivery with error handling and logging
+
+Objective 6: Deploy Production-Ready Application
+   - Deploy backend on Render with FastAPI/Swagger documentation
+   - Deploy frontend on Netlify with CI/CD pipeline
+   - Configure MongoDB Atlas for cloud database hosting
+
+
+================================================================================
+
+                 3. BRIEF DESCRIPTION OF THE PROJECT
+
+The Fire Prediction System is a comprehensive full-stack web application
+that combines machine learning, real-time satellite data, and modern web
+technologies to predict and monitor wildfire incidents across India.
+
+3.1 System Overview
+
+The system consists of three main components:
+
+a) Backend Server (FastAPI):
+   The backend provides RESTful API endpoints for fire prediction, incident
+   reporting, and data retrieval. It hosts the pre-trained Random Forest
+   model, manages WebSocket connections for real-time updates, and runs
+   background tasks for NASA FIRMS data synchronization.
+
+b) Frontend Dashboard (React.js):
+   The frontend presents an interactive dark-themed dashboard with a
+   geospatial map of India, fire prediction form, incident reporting form,
+   live fire feed, and historical analytics charts.
+
+c) Data Layer (MongoDB Atlas + NASA FIRMS):
+   The data layer combines persistent storage in MongoDB Atlas with
+   real-time satellite data from NASA FIRMS. The system processes over
+   11,000 fire hotspot detections per cycle from the VIIRS sensor aboard
+   the Suomi-NPP satellite.
+
+3.2 Key Features
+
+Table 1: Key Features of Fire Prediction System
+
++----+-------------------------------+------------------------------------------+
+| #  | Feature                       | Description                              |
++----+-------------------------------+------------------------------------------+
+| 1  | Fire Risk Prediction          | ML model predicts fire probability       |
+|    |                               | using lat, long, wind speed, veg index   |
++----+-------------------------------+------------------------------------------+
+| 2  | Real-time Satellite Data      | NASA FIRMS VIIRS fire detections for     |
+|    |                               | India (11,000+ hotspots)                 |
++----+-------------------------------+------------------------------------------+
+| 3  | Interactive Geospatial Map    | Leaflet map with CartoDB Dark Matter     |
+|    |                               | tiles, fire markers, popups              |
++----+-------------------------------+------------------------------------------+
+| 4  | Fire Incident Reporting       | User-submitted reports with location,    |
+|    |                               | description, and intensity               |
++----+-------------------------------+------------------------------------------+
+| 5  | Live Fire Feed                | Real-time scrolling feed of satellite    |
+|    |                               | fire detections via WebSocket            |
++----+-------------------------------+------------------------------------------+
+| 6  | Email Alert System            | Automated alerts via Resend API for      |
+|    |                               | Medium/High risk predictions             |
++----+-------------------------------+------------------------------------------+
+| 7  | Historical Analytics          | Bar/Line charts for 7-day fire trends    |
+|    |                               | using Recharts library                   |
++----+-------------------------------+------------------------------------------+
+| 8  | Swagger API Documentation     | Auto-generated API docs at /docs         |
++----+-------------------------------+------------------------------------------+
+| 9  | WebSocket Real-time Updates   | Bidirectional communication for live     |
+|    |                               | fire broadcasts                          |
++----+-------------------------------+------------------------------------------+
+| 10 | Cloud Deployment              | Render (backend) + Netlify (frontend)    |
+|    |                               | + MongoDB Atlas (database)               |
++----+-------------------------------+------------------------------------------+
+
+3.3 User Roles
+
+a) Fire Department Officials: Monitor live fire incidents, receive alerts,
+   make predictions for areas under their jurisdiction.
+
+b) Environmental Researchers: Analyze fire patterns, use prediction model
+   for research, access historical data.
+
+c) Emergency Responders: View real-time fire data, report incidents from
+   the field, access location-based fire information.
+
+d) General Public: Report fire sightings, check fire risk for their area,
+   view real-time fire status.
+
+
+================================================================================
+
+                      4. TECHNOLOGY USED
+
+4.1 Backend Technologies
+
+Table 2: Backend Technology Stack
+
++----+---------------------+----------+-------------------------------------------+
+| #  | Technology          | Version  | Purpose                                   |
++----+---------------------+----------+-------------------------------------------+
+| 1  | Python              | 3.11     | Primary backend programming language      |
++----+---------------------+----------+-------------------------------------------+
+| 2  | FastAPI             | 0.110.1  | Async web framework with auto Swagger     |
++----+---------------------+----------+-------------------------------------------+
+| 3  | Uvicorn             | 0.25.0   | ASGI server for FastAPI                   |
++----+---------------------+----------+-------------------------------------------+
+| 4  | Motor               | 3.7.0    | Async MongoDB driver for Python           |
++----+---------------------+----------+-------------------------------------------+
+| 5  | PyMongo             | 4.10.1   | MongoDB Python driver (sync operations)   |
++----+---------------------+----------+-------------------------------------------+
+| 6  | scikit-learn        | 1.8.0    | Machine learning library (Random Forest)  |
++----+---------------------+----------+-------------------------------------------+
+| 7  | NumPy               | 2.4.4    | Numerical computing for feature arrays    |
++----+---------------------+----------+-------------------------------------------+
+| 8  | Pandas              | 3.0.2    | Data manipulation and analysis            |
++----+---------------------+----------+-------------------------------------------+
+| 9  | Pydantic            | 2.12.5   | Data validation and serialization         |
++----+---------------------+----------+-------------------------------------------+
+| 10 | Resend              | 2.27.0   | Email delivery API for fire alerts        |
++----+---------------------+----------+-------------------------------------------+
+| 11 | Certifi             | 2024+    | SSL certificate verification (MongoDB)    |
++----+---------------------+----------+-------------------------------------------+
+| 12 | Joblib              | 1.5.3    | Model serialization/deserialization       |
++----+---------------------+----------+-------------------------------------------+
+
+4.2 Frontend Technologies
+
+Table 3: Frontend Technology Stack
+
++----+---------------------+----------+-------------------------------------------+
+| #  | Technology          | Version  | Purpose                                   |
++----+---------------------+----------+-------------------------------------------+
+| 1  | React.js            | 18.x     | Frontend UI framework                     |
++----+---------------------+----------+-------------------------------------------+
+| 2  | Leaflet             | 1.9.4    | Interactive geospatial map library        |
++----+---------------------+----------+-------------------------------------------+
+| 3  | React-Leaflet       | 4.2.1    | React wrapper for Leaflet maps            |
++----+---------------------+----------+-------------------------------------------+
+| 4  | Recharts            | 2.x      | Data visualization (charts)               |
++----+---------------------+----------+-------------------------------------------+
+| 5  | Axios               | 1.7.9    | HTTP client for API calls                 |
++----+---------------------+----------+-------------------------------------------+
+| 6  | Tailwind CSS        | 3.4.1    | Utility-first CSS framework               |
++----+---------------------+----------+-------------------------------------------+
+| 7  | Lucide React        | 0.x      | Icon library for UI elements              |
++----+---------------------+----------+-------------------------------------------+
+| 8  | Framer Motion       | 11.x     | Animation library                         |
++----+---------------------+----------+-------------------------------------------+
+
+4.3 Database and Cloud Services
+
+Table 4: Database and Cloud Technology Stack
+
++----+---------------------+---------------------------------------------------+
+| #  | Service             | Purpose                                           |
++----+---------------------+---------------------------------------------------+
+| 1  | MongoDB Atlas       | Cloud-hosted NoSQL database (free tier M0)        |
++----+---------------------+---------------------------------------------------+
+| 2  | Render              | Backend hosting (FastAPI deployment)               |
++----+---------------------+---------------------------------------------------+
+| 3  | Netlify             | Frontend hosting (React build deployment)          |
++----+---------------------+---------------------------------------------------+
+| 4  | NASA FIRMS API      | Real-time satellite fire data (VIIRS SNPP sensor)  |
++----+---------------------+---------------------------------------------------+
+| 5  | Resend              | Transactional email delivery service               |
++----+---------------------+---------------------------------------------------+
+| 6  | GitHub              | Version control and CI/CD trigger                  |
++----+---------------------+---------------------------------------------------+
+
+4.4 Justification for Technology Choices
+
+FastAPI was chosen over Flask/Django due to its native async support, automatic
+Swagger documentation, and Pydantic-based data validation -- critical for
+handling real-time satellite data and WebSocket connections. MongoDB was
+selected over SQL databases due to the schema-flexible nature of satellite
+fire data and the built-in geospatial query capabilities. React.js was chosen
+for its component-based architecture, enabling modular development of the
+dashboard, map, and form components. Leaflet was preferred over Google Maps
+for its open-source nature and extensive tile layer support.
+
+
+================================================================================
+
+                      5. HARDWARE REQUIREMENTS
+
+Table 5: Hardware Requirements
+
++----+--------------------+--------------------------+--------------------------+
+| #  | Component          | Development              | Production (Cloud)       |
++----+--------------------+--------------------------+--------------------------+
+| 1  | Processor          | Intel i5 / AMD Ryzen 5   | Render Free Tier CPU     |
+|    |                    | or equivalent             |                          |
++----+--------------------+--------------------------+--------------------------+
+| 2  | RAM                | 8 GB minimum             | 512 MB (Render Free)     |
++----+--------------------+--------------------------+--------------------------+
+| 3  | Storage            | 256 GB SSD               | Ephemeral (Render)       |
+|    |                    |                          | 512 MB (MongoDB Atlas)   |
++----+--------------------+--------------------------+--------------------------+
+| 4  | Network            | Broadband Internet       | Cloud-managed            |
+|    |                    | (10 Mbps+)               |                          |
++----+--------------------+--------------------------+--------------------------+
+| 5  | Display            | 1920x1080 minimum        | N/A (server)             |
++----+--------------------+--------------------------+--------------------------+
+| 6  | GPU                | Not required             | Not required             |
++----+--------------------+--------------------------+--------------------------+
+
+
+================================================================================
+
+                      6. SOFTWARE REQUIREMENTS
+
+Table 6: Software Requirements
+
++----+--------------------+--------------------------+--------------------------+
+| #  | Software           | Development              | Production               |
++----+--------------------+--------------------------+--------------------------+
+| 1  | Operating System   | Windows 10/11, Ubuntu    | Linux (Docker/Render)    |
+|    |                    | 20.04+, or macOS         |                          |
++----+--------------------+--------------------------+--------------------------+
+| 2  | Python             | 3.11+                    | 3.11+                    |
++----+--------------------+--------------------------+--------------------------+
+| 3  | Node.js            | 20.x LTS                | 20.x (Netlify build)     |
++----+--------------------+--------------------------+--------------------------+
+| 4  | Package Manager    | pip (Python), yarn (JS)  | pip, yarn                |
++----+--------------------+--------------------------+--------------------------+
+| 5  | Database           | MongoDB 6.0+             | MongoDB Atlas M0         |
++----+--------------------+--------------------------+--------------------------+
+| 6  | IDE/Editor         | VS Code, PyCharm         | N/A                      |
++----+--------------------+--------------------------+--------------------------+
+| 7  | Browser            | Chrome 120+, Firefox     | Any modern browser       |
+|    |                    | 120+, Edge               |                          |
++----+--------------------+--------------------------+--------------------------+
+| 8  | Version Control    | Git 2.40+                | GitHub                   |
++----+--------------------+--------------------------+--------------------------+
+
+
+================================================================================
+
+                      7. DESIGN DESCRIPTION
+
+7.1 System Architecture Diagram
+
+Figure 1: System Architecture of Fire Prediction System
+
++------------------+        +-------------------+        +------------------+
+|                  |  HTTP  |                   |  TCP   |                  |
+|   React.js       |------->|    FastAPI         |------->|   MongoDB Atlas  |
+|   Frontend       |<-------|    Backend         |<-------|   Database       |
+|   (Netlify)      |  JSON  |    (Render)        |  BSON  |                  |
+|                  |        |                   |        +------------------+
++------------------+        +-------------------+
+        |                          |         |
+        |  WebSocket               |         |
+        |<-------------------------|         |
+        |  (Real-time updates)     |         |
+                                   |         |
+                            +------v------+  |
+                            |             |  |
+                            | NASA FIRMS  |  |
+                            | API Server  |  |
+                            | (Satellite  |  |
+                            |  Data)      |  |
+                            +-------------+  |
+                                             |
+                            +----------------v----+
+                            |                     |
+                            |   Resend Email API  |
+                            |   (Alert Service)   |
+                            +---------------------+
+
+The system follows a three-tier architecture:
+
+Presentation Tier: React.js frontend deployed on Netlify, providing the
+interactive dashboard with geospatial map, forms, and charts.
+
+Application Tier: FastAPI backend deployed on Render, handling business logic
+including ML predictions, data processing, WebSocket management, and external
+API integrations.
+
+Data Tier: MongoDB Atlas for persistent storage, NASA FIRMS API for real-time
+satellite data, and Resend API for email delivery.
+
+
+7.2 Flow Chart
+
+Figure 2: System Flow Chart - Fire Prediction Process
+
+                        +-------------------+
+                        |      START        |
+                        +--------+----------+
+                                 |
+                        +--------v----------+
+                        | User Opens        |
+                        | Dashboard         |
+                        +--------+----------+
+                                 |
+                  +--------------+--------------+
+                  |              |              |
+          +-------v------+ +----v----+ +-------v-------+
+          | View Map &   | | Make    | | Report Fire   |
+          | Live Feed    | | Predict | | Incident      |
+          +---------+----+ +----+----+ +-------+-------+
+                    |           |               |
+                    |    +------v------+        |
+                    |    | Enter:      |        |
+                    |    | - Latitude  |  +-----v-------+
+                    |    | - Longitude |  | Enter:      |
+                    |    | - Wind Speed|  | - Location  |
+                    |    | - Veg Index |  | - Desc      |
+                    |    +------+------+  | - Intensity |
+                    |           |         +------+------+
+                    |    +------v------+         |
+                    |    | Send to     |   +-----v-------+
+                    |    | FastAPI     |   | Store in    |
+                    |    | /api/predict|   | MongoDB     |
+                    |    +------+------+   +-----+-------+
+                    |           |                |
+                    |    +------v------+   +-----v-------+
+                    |    | Random Forest|  | Broadcast   |
+                    |    | Classifier  |   | via         |
+                    |    +------+------+   | WebSocket   |
+                    |           |          +-----+-------+
+                    |    +------v------+         |
+                    |    | Risk Level: |         |
+                    |    | Low/Med/High|         |
+                    |    +------+------+         |
+                    |           |                |
+                    |    +------v------+         |
+                    |    | Risk >=     |         |
+                    |    | Medium?     |         |
+                    |    +---+----+----+         |
+                    |        |    |              |
+                    |    Yes |    | No           |
+                    | +------v-+  |              |
+                    | |Send    |  |              |
+                    | |Email   |  |              |
+                    | |Alert   |  |              |
+                    | +------+-+  |              |
+                    |        |    |              |
+                    |    +---v----v----+         |
+                    |    | Display     |         |
+                    |    | Result on   |         |
+                    |    | Dashboard   |         |
+                    |    +------+------+         |
+                    |           |                |
+                    +-----------+--------+-------+
+                               |
+                        +------v------+
+                        |    END      |
+                        +-------------+
+
+
+Figure 3: Flow Chart - NASA FIRMS Data Fetching (Background Task)
+
+                        +-------------------+
+                        | Server Startup    |
+                        +--------+----------+
+                                 |
+                        +--------v----------+
+                        | Start Background  |
+                        | Task              |
+                        +--------+----------+
+                                 |
+                        +--------v----------+
+                        | NASA FIRMS        |
+                        | API Key exists?   |
+                        +---+----------+----+
+                            |          |
+                        Yes |          | No
+                     +------v------+   |
+                     | Call FIRMS  |   |
+                     | Area API    |   |
+                     | India bbox  |   |
+                     +------+------+   |
+                            |          |
+                     +------v------+   |
+                     | Parse CSV   |   |
+                     | Response    |   |
+                     +------+------+   |
+                            |          |
+                     +------v------+   |
+                     | Data found? |   |
+                     +--+------+---+   |
+                        |      |       |
+                    Yes |      | No    |
+                 +------v--+ +-v-------v-------+
+                 | Store in| | Generate        |
+                 | MongoDB | | Synthetic Data  |
+                 +------+--+ +--------+--------+
+                        |             |
+                 +------v-------------v---+
+                 | Broadcast to WebSocket |
+                 | Clients                |
+                 +----------+-------------+
+                            |
+                 +----------v-------------+
+                 | Sleep 5 minutes        |
+                 +----------+-------------+
+                            |
+                            | (Loop back to API call)
+
+
+7.3 Data Flow Diagrams (DFDs)
+
+7.3.1 Level 0 DFD (Context Diagram)
+
+Figure 4: Level 0 DFD - Context Diagram
+
++----------+    Prediction     +---------------------+    Satellite    +----------+
+|          |    Request        |                     |    Fire Data   |  NASA    |
+|  User /  |------------------>|                     |<----------------|  FIRMS   |
+|  Fire    |    Prediction     |   FIRE PREDICTION   |                |  API     |
+|  Dept    |<------------------|   SYSTEM            |    Email       +----------+
+|  Officer |    Result +       |                     |    Alert
+|          |    Risk Level     |                     |--------------->+----------+
+|          |                   |                     |                |  Email   |
+|          |    Fire Report    |                     |                |  Service |
+|          |------------------>|                     |                | (Resend) |
+|          |    Live Feed      |                     |                +----------+
+|          |<------------------|                     |
+|          |    Map Data       +---------------------+
++----------+                          |      ^
+                                      |      |
+                                      v      |
+                               +------+------+---+
+                               |                  |
+                               |   MongoDB Atlas  |
+                               |   Database       |
+                               |                  |
+                               +------------------+
+
+
+7.3.2 Level 1 DFD
+
+Figure 5: Level 1 DFD
+
+                                                    +----------+
++----------+   Lat, Long,      +-------------+     |          |
+|          |   Wind Speed,      |   1.0       |     | MongoDB  |
+|  User    |   Veg Index        | PREDICTION  |---->| Atlas    |
+|          |------------------>| MODULE      |     | (Store)  |
+|          |<------------------| (Random     |     |          |
+|          |   Risk Level,     | Forest)     |     +----------+
+|          |   Probability     +------+------+
+|          |                          |
+|          |                   +------v------+     +----------+
+|          |                   |   2.0       |     |          |
+|          |                   | EMAIL ALERT |---->| Resend   |
+|          |                   | MODULE      |     | API      |
+|          |                   +-------------+     +----------+
+|          |
+|          |   Fire Report     +-------------+     +----------+
+|          |------------------>|   3.0       |     |          |
+|          |   Success/Fail    | REPORTING   |---->| MongoDB  |
+|          |<------------------| MODULE      |     | Atlas    |
+|          |                   +-------------+     +----------+
+|          |
+|          |   Map + Feed      +-------------+     +----------+
+|          |<------------------+   4.0       |<----| NASA     |
+|          |                   | MONITORING  |     | FIRMS    |
+|          |                   | MODULE      |     | API      |
+|          |                   +------+------+     +----------+
+|          |                          |
+|          |   Chart Data      +------v------+     +----------+
+|          |<------------------+   5.0       |<----| MongoDB  |
+|          |                   | ANALYTICS   |     | Atlas    |
++----------+                   | MODULE      |     +----------+
+                               +-------------+
+
+
+7.3.3 Level 2 DFD - Prediction Module
+
+Figure 6: Level 2 DFD - Prediction Module Detail
+
++----------+   Input Data     +--------------+   Feature    +-------------+
+|          |---------------->| 1.1          |   Array     | 1.2         |
+|  User    |                 | VALIDATE     |------------>| PREPARE     |
+|          |                 | INPUT        |             | FEATURES    |
+|          |                 +--------------+             +------+------+
+|          |                                                      |
+|          |                                              +------v------+
+|          |                                              | 1.3         |
+|          |                                              | RUN MODEL   |
+|          |                                              | (Random     |
+|          |                                              |  Forest)    |
+|          |                                              +------+------+
+|          |                                                      |
+|          |   Prediction     +--------------+   Pred Doc  +------v------+
+|          |<----------------| 1.5          |<------------| 1.4         |
+|          |   Result        | FORMAT       |             | CLASSIFY    |
+|          |                 | RESPONSE     |             | RISK LEVEL  |
++----------+                 +------+-------+             +------+------+
+                                    |                            |
+                                    v                            v
+                             +------+-------+            +------+------+
+                             | MongoDB      |            | 1.6         |
+                             | predictions  |            | SEND EMAIL  |
+                             | collection   |            | (if Medium  |
+                             +--------------+            | or High)    |
+                                                         +------+------+
+                                                                |
+                                                                v
+                                                         +--------------+
+                                                         | Resend API   |
+                                                         +--------------+
+
+
+7.4 Entity Relationship Diagram
+
+Figure 7: Entity Relationship Diagram
+
++------------------+           +-------------------+
+|   PREDICTIONS    |           |   LIVE_FIRES      |
++------------------+           +-------------------+
+| id (PK)          |           | id (PK)           |
+| latitude         |           | latitude          |
+| longitude        |           | longitude         |
+| wind_speed       |           | brightness        |
+| vegetation_index |           | confidence        |
+| prediction       |           | acq_date          |
+| probability      |           | acq_time          |
+| risk_level       |           | satellite         |
+| timestamp        |           | frp               |
++------------------+           +-------------------+
+
++------------------+
+| REPORTED_FIRES   |
++------------------+
+| id (PK)          |
+| latitude         |
+| longitude        |
+| description      |
+| intensity        |
+| reported_by      |
+| timestamp        |
++------------------+
+
+Relationships:
+- PREDICTIONS and LIVE_FIRES share geospatial overlap (latitude/longitude
+  can be correlated for validation).
+- REPORTED_FIRES integrate with LIVE_FIRES in the real-time feed displayed
+  on the dashboard map.
+- All three entities are independent collections in MongoDB (NoSQL),
+  connected through the application layer rather than foreign keys.
+
+
+================================================================================
+
+                     8. PROJECT DESCRIPTION
+
+8.1 Database Table Description
+
+Table 7: Predictions Collection Schema
+
++----+-------------------+-----------+----------------+---------------------+
+| #  | Field             | Data Type | Constraints    | Description         |
++----+-------------------+-----------+----------------+---------------------+
+| 1  | latitude          | Float     | -90 to 90      | Input latitude      |
++----+-------------------+-----------+----------------+---------------------+
+| 2  | longitude         | Float     | -180 to 180    | Input longitude     |
++----+-------------------+-----------+----------------+---------------------+
+| 3  | wind_speed        | Float     | >= 0           | Wind speed (km/h)   |
++----+-------------------+-----------+----------------+---------------------+
+| 4  | vegetation_index  | Float     | 0 to 1         | NDVI value          |
++----+-------------------+-----------+----------------+---------------------+
+| 5  | prediction        | Integer   | 0 or 1         | Binary prediction   |
++----+-------------------+-----------+----------------+---------------------+
+| 6  | probability       | Float     | 0 to 1         | Fire probability    |
++----+-------------------+-----------+----------------+---------------------+
+| 7  | risk_level        | String    | Low/Med/High   | Risk classification |
++----+-------------------+-----------+----------------+---------------------+
+| 8  | timestamp         | String    | ISO 8601       | Prediction time     |
++----+-------------------+-----------+----------------+---------------------+
+
+
+Table 8: Live Fires Collection Schema (NASA FIRMS Data)
+
++----+-------------------+-----------+----------------+---------------------+
+| #  | Field             | Data Type | Constraints    | Description         |
++----+-------------------+-----------+----------------+---------------------+
+| 1  | id                | String    | UUID           | Unique identifier   |
++----+-------------------+-----------+----------------+---------------------+
+| 2  | latitude          | Float     | 6 to 36        | Fire latitude       |
++----+-------------------+-----------+----------------+---------------------+
+| 3  | longitude         | Float     | 68 to 97       | Fire longitude      |
++----+-------------------+-----------+----------------+---------------------+
+| 4  | brightness        | Float     | > 0            | Brightness temp (K) |
++----+-------------------+-----------+----------------+---------------------+
+| 5  | confidence        | String    | low/nom/high   | Detection conf.     |
++----+-------------------+-----------+----------------+---------------------+
+| 6  | acq_date          | String    | YYYY-MM-DD     | Acquisition date    |
++----+-------------------+-----------+----------------+---------------------+
+| 7  | acq_time          | String    | HHMM           | Acquisition time    |
++----+-------------------+-----------+----------------+---------------------+
+| 8  | satellite         | String    | Name           | Satellite name      |
++----+-------------------+-----------+----------------+---------------------+
+| 9  | frp               | Float     | >= 0           | Fire Radiative      |
+|    |                   |           |                | Power (MW)          |
++----+-------------------+-----------+----------------+---------------------+
+
+
+Table 9: Reported Fires Collection Schema
+
++----+-------------------+-----------+----------------+---------------------+
+| #  | Field             | Data Type | Constraints    | Description         |
++----+-------------------+-----------+----------------+---------------------+
+| 1  | id                | String    | UUID           | Unique identifier   |
++----+-------------------+-----------+----------------+---------------------+
+| 2  | latitude          | Float     | -90 to 90      | Reported latitude   |
++----+-------------------+-----------+----------------+---------------------+
+| 3  | longitude         | Float     | -180 to 180    | Reported longitude  |
++----+-------------------+-----------+----------------+---------------------+
+| 4  | description       | String    | Required       | Fire description    |
++----+-------------------+-----------+----------------+---------------------+
+| 5  | intensity         | String    | Low/Med/High   | Fire intensity      |
++----+-------------------+-----------+----------------+---------------------+
+| 6  | reported_by       | String    | Default: Anon  | Reporter name       |
++----+-------------------+-----------+----------------+---------------------+
+| 7  | timestamp         | String    | ISO 8601       | Report time         |
++----+-------------------+-----------+----------------+---------------------+
+
+
+8.2 File/Database Design
+
+The database follows a NoSQL document-oriented design using MongoDB. Three
+primary collections are maintained:
+
+a) predictions: Stores all fire risk predictions made through the system.
+   Each document contains the input parameters (latitude, longitude, wind
+   speed, vegetation index) alongside the model output (prediction,
+   probability, risk level) and timestamp.
+
+b) live_fires: Stores real-time fire detection data from NASA FIRMS.
+   This collection is refreshed every 5 minutes with the latest VIIRS
+   satellite data. Old data is replaced with new batch during each update
+   cycle.
+
+c) reported_fires: Stores user-submitted fire incident reports. These
+   persist indefinitely and are integrated with the live fire feed for
+   display on the dashboard map.
+
+MongoDB was chosen over relational databases for several reasons:
+- Schema flexibility for varying satellite data formats
+- Native geospatial indexing (2dsphere) for location-based queries
+- Document-oriented storage aligns with JSON API responses
+- Horizontal scalability for handling large satellite datasets
+
+
+8.3 Input/Output Form Design
+
+Figure 8: Fire Prediction Input Form
+
++--------------------------------------------------+
+|  Fire Risk Prediction                            |
++--------------------------------------------------+
+|                                                  |
+|  LATITUDE              LONGITUDE                 |
+|  +------------------+  +------------------+      |
+|  | e.g., 28.6139    |  | e.g., 77.2090    |      |
+|  +------------------+  +------------------+      |
+|                                                  |
+|  WIND SPEED (KM/H)                              |
+|  +------------------------------------------+   |
+|  | e.g., 15.5                                |   |
+|  +------------------------------------------+   |
+|                                                  |
+|  VEGETATION INDEX (0-1)                          |
+|  +------------------------------------------+   |
+|  | e.g., 0.35                                |   |
+|  +------------------------------------------+   |
+|                                                  |
+|  +------------------------------------------+   |
+|  |         PREDICT FIRE RISK                 |   |
+|  +------------------------------------------+   |
+|                                                  |
++--------------------------------------------------+
+
+
+Figure 9: Prediction Result Output
+
++--------------------------------------------------+
+|  PREDICTION RESULT                               |
++--------------------------------------------------+
+|                                                  |
+|  Risk Level:         HIGH (Red) / LOW (Blue)     |
+|  Probability:        98.0%                       |
+|  Prediction:         FIRE RISK DETECTED          |
+|  Email Alert:        SENT TO ADMIN               |
+|                                                  |
+|  +----------------------------------------------+|
+|  | EMAIL ALERT SENT                              ||
+|  | Fire risk alert sent to admin email           ||
+|  +----------------------------------------------+|
++--------------------------------------------------+
+
+
+Figure 10: Report Fire Incident Form
+
++--------------------------------------------------+
+|  Report Fire Incident                            |
++--------------------------------------------------+
+|                                                  |
+|  LATITUDE              LONGITUDE                 |
+|  +------------------+  +------------------+      |
+|  | e.g., 28.6139    |  | e.g., 77.2090    |      |
+|  +------------------+  +------------------+      |
+|                                                  |
+|  DESCRIPTION                                     |
+|  +------------------------------------------+   |
+|  |                                          |   |
+|  | Describe the fire incident...            |   |
+|  |                                          |   |
+|  +------------------------------------------+   |
+|                                                  |
+|  INTENSITY LEVEL                                 |
+|  +------------------------------------------+   |
+|  | Medium                              [v]  |   |
+|  +------------------------------------------+   |
+|                                                  |
+|  YOUR NAME (OPTIONAL)                            |
+|  +------------------------------------------+   |
+|  | Anonymous                                 |   |
+|  +------------------------------------------+   |
+|                                                  |
+|  +------------------------------------------+   |
+|  |         REPORT INCIDENT                   |   |
+|  +------------------------------------------+   |
++--------------------------------------------------+
+
+
+8.4 API Endpoint Design
+
+Table 10: RESTful API Endpoints
+
++----+--------+------------------------+---------------------------+----------+
+| #  | Method | Endpoint               | Description               | Auth     |
++----+--------+------------------------+---------------------------+----------+
+| 1  | GET    | /api/                  | API health check          | None     |
++----+--------+------------------------+---------------------------+----------+
+| 2  | POST   | /api/predict           | Fire risk prediction      | None     |
++----+--------+------------------------+---------------------------+----------+
+| 3  | POST   | /api/report-fire       | Report fire incident      | None     |
++----+--------+------------------------+---------------------------+----------+
+| 4  | GET    | /api/fires/live        | Get live fire incidents   | None     |
++----+--------+------------------------+---------------------------+----------+
+| 5  | GET    | /api/fires/reported    | Get reported incidents    | None     |
++----+--------+------------------------+---------------------------+----------+
+| 6  | GET    | /api/fires/historical  | Historical fire data      | None     |
++----+--------+------------------------+---------------------------+----------+
+| 7  | WS     | /api/ws/fires          | WebSocket real-time feed  | None     |
++----+--------+------------------------+---------------------------+----------+
+
+Table 11: API Request/Response Format - Prediction Endpoint
+
+Request Body (POST /api/predict):
+{
+    "latitude": 28.6139,          // Float, -90 to 90
+    "longitude": 77.2090,         // Float, -180 to 180
+    "wind_speed": 25.5,           // Float, >= 0 (km/h)
+    "vegetation_index": 0.25      // Float, 0 to 1
+}
+
+Response Body (200 OK):
+{
+    "prediction": 1,              // 0 = No Risk, 1 = Risk
+    "probability": 0.98,          // 0.0 to 1.0
+    "risk_level": "High",         // "Low", "Medium", "High"
+    "latitude": 28.6139,
+    "longitude": 77.2090,
+    "wind_speed": 25.5,
+    "vegetation_index": 0.25,
+    "timestamp": "2026-04-12T09:30:54.040376+00:00",
+    "email_sent": true            // true if alert email sent
+}
+
+
+================================================================================
+
+                        9. WORKING MODEL
+
+9.1 Machine Learning Model
+
+The fire prediction model uses a Random Forest Classifier, an ensemble
+learning method that constructs multiple decision trees during training
+and outputs the mode of classes for classification tasks [3].
+
+Table 12: Random Forest Model Configuration
+
++----+---------------------------+-------------------+
+| #  | Parameter                 | Value             |
++----+---------------------------+-------------------+
+| 1  | Algorithm                 | RandomForestClassi|
+|    |                           | fier              |
++----+---------------------------+-------------------+
+| 2  | Number of Estimators      | 100 trees         |
++----+---------------------------+-------------------+
+| 3  | Random State              | 42                |
++----+---------------------------+-------------------+
+| 4  | Training Samples          | 1,000             |
++----+---------------------------+-------------------+
+| 5  | Feature Count             | 4                 |
++----+---------------------------+-------------------+
+| 6  | Output Classes            | 2 (Fire/No Fire)  |
++----+---------------------------+-------------------+
+| 7  | Serialization             | Pickle (.pkl)     |
++----+---------------------------+-------------------+
+
+Feature Description:
+
+Table 13: Input Features for ML Model
+
++----+-------------------+-------------+-----------------------------------+
+| #  | Feature           | Range       | Description                       |
++----+-------------------+-------------+-----------------------------------+
+| 1  | Latitude          | 5 - 40      | Geographic latitude (degrees N)   |
++----+-------------------+-------------+-----------------------------------+
+| 2  | Longitude         | 54 - 102    | Geographic longitude (degrees E)  |
++----+-------------------+-------------+-----------------------------------+
+| 3  | Wind Speed        | 0 - 50      | Wind velocity (km/h)              |
++----+-------------------+-------------+-----------------------------------+
+| 4  | Vegetation Index  | 0 - 1       | Normalized Difference Vegetation  |
+|    |                   |             | Index (NDVI)                      |
++----+-------------------+-------------+-----------------------------------+
+
+Risk Classification Logic:
+- probability < 0.3  -->  Risk Level: LOW
+- 0.3 <= probability < 0.7  -->  Risk Level: MEDIUM
+- probability >= 0.7  -->  Risk Level: HIGH
+
+Training Data Rules:
+- High wind speed (> 25 km/h) + Low vegetation (< 0.3) = High fire risk
+- Medium wind (> 15 km/h) + Medium vegetation (< 0.5) = 40% fire probability
+- Other combinations = Low fire risk
+
+
+9.2 NASA FIRMS Integration
+
+The system integrates with NASA's Fire Information for Resource Management
+System (FIRMS) to obtain real-time satellite fire data [4].
+
+API Configuration:
+- Endpoint: https://firms.modaps.eosdis.nasa.gov/api/area/csv/
+- Sensor: VIIRS (Visible Infrared Imaging Radiometer Suite)
+- Satellite: Suomi-NPP (VIIRS_SNPP_NRT)
+- Coverage: India bounding box (68E, 6N, 97E, 36N)
+- Temporal Range: Last 2 days
+- Update Frequency: Every 5 minutes
+- Data Format: CSV
+- Average Records Per Cycle: ~11,000 fire hotspots
+
+Data Processing Pipeline:
+1. HTTP GET request to FIRMS API with MAP_KEY
+2. Parse CSV response using Python csv.DictReader
+3. Map satellite codes to names (N -> Suomi-NPP, 1 -> NOAA-20)
+4. Map confidence codes (h -> high, n -> nominal, l -> low)
+5. Generate UUID for each fire record
+6. Clear old data from MongoDB live_fires collection
+7. Bulk insert new fire records
+8. Broadcast latest 5 fires via WebSocket to connected clients
+
+
+9.3 Email Alert System
+
+The email alert system uses Resend API to send HTML-formatted fire risk
+alerts when predictions indicate Medium or High risk levels.
+
+Email Alert Trigger Conditions:
+- Risk Level = "Medium" (probability 0.3 - 0.7)
+- Risk Level = "High" (probability >= 0.7)
+
+Email Content Includes:
+- Risk level with color coding (Red for High, Orange for Medium)
+- Probability percentage
+- Geographic coordinates (latitude, longitude)
+- Wind speed and vegetation index
+- Timestamp of prediction
+- Google Maps link to the predicted location
+- Styled HTML template matching the dashboard dark theme
+
+
+9.4 Real-time WebSocket Communication
+
+The system uses WebSocket protocol for bidirectional real-time communication
+between the FastAPI backend and React frontend [5].
+
+WebSocket Architecture:
+- Endpoint: /api/ws/fires
+- Connection Management: List of active connections maintained in memory
+- Message Types: "live_fire", "reported_fire", "pong"
+- Auto-reconnection: Frontend attempts reconnect every 3 seconds on disconnect
+
+Message Format:
+{
+    "type": "live_fire" | "reported_fire",
+    "data": {
+        "id": "uuid-string",
+        "latitude": 28.6139,
+        "longitude": 77.2090,
+        ...
+    }
+}
+
+
+================================================================================
+
+                     10. TESTING & TOOLS USED
+
+10.1 Testing Methodology
+
+The Fire Prediction System was tested using a comprehensive multi-layered
+approach covering backend API testing, frontend UI testing, integration
+testing, and end-to-end testing.
+
+Table 14: Testing Results Summary
+
++----+---------------------------+---------+----------------------------------+
+| #  | Test Case                 | Status  | Details                          |
++----+---------------------------+---------+----------------------------------+
+| 1  | API Health Check          | PASSED  | GET /api/ returns 200            |
++----+---------------------------+---------+----------------------------------+
+| 2  | Fire Prediction (High)    | PASSED  | High wind + low veg = High risk  |
++----+---------------------------+---------+----------------------------------+
+| 3  | Fire Prediction (Low)     | PASSED  | Low wind + high veg = Low risk   |
++----+---------------------------+---------+----------------------------------+
+| 4  | Report Fire Incident      | PASSED  | POST stores in MongoDB           |
++----+---------------------------+---------+----------------------------------+
+| 5  | Get Live Fires            | PASSED  | Returns NASA FIRMS data          |
++----+---------------------------+---------+----------------------------------+
+| 6  | Get Reported Fires        | PASSED  | Returns user reports             |
++----+---------------------------+---------+----------------------------------+
+| 7  | Historical Data           | PASSED  | Returns aggregated data          |
++----+---------------------------+---------+----------------------------------+
+| 8  | Input Validation          | PASSED  | Rejects invalid coordinates      |
++----+---------------------------+---------+----------------------------------+
+| 9  | WebSocket Connection      | PASSED  | Establishes and maintains conn   |
++----+---------------------------+---------+----------------------------------+
+| 10 | Dashboard Rendering       | PASSED  | All components render correctly  |
++----+---------------------------+---------+----------------------------------+
+| 11 | Map Center (India)        | PASSED  | Centered at 20.59N, 78.96E      |
++----+---------------------------+---------+----------------------------------+
+| 12 | Email Alert Delivery      | PASSED  | Resend API delivers emails       |
++----+---------------------------+---------+----------------------------------+
+| 13 | CORS Cross-Origin         | PASSED  | Netlify to Render communication  |
++----+---------------------------+---------+----------------------------------+
+| 14 | MongoDB Atlas SSL/TLS     | PASSED  | certifi CA bundle verification   |
++----+---------------------------+---------+----------------------------------+
+
+Overall Test Success Rate: 100% (14/14 tests passed)
+
+10.2 Testing Tools
+
+Table 15: Testing Tools Used
+
++----+---------------------+-----------------------------------------------+
+| #  | Tool                | Purpose                                       |
++----+---------------------+-----------------------------------------------+
+| 1  | cURL                | Backend API endpoint testing                  |
++----+---------------------+-----------------------------------------------+
+| 2  | Playwright          | Browser automation and UI testing             |
++----+---------------------+-----------------------------------------------+
+| 3  | Swagger UI          | Interactive API testing at /docs              |
++----+---------------------+-----------------------------------------------+
+| 4  | Browser DevTools    | Console logging, network monitoring           |
++----+---------------------+-----------------------------------------------+
+| 5  | Python unittest     | Unit testing for ML model                     |
++----+---------------------+-----------------------------------------------+
+
+10.3 Sample Test Cases
+
+Test Case 1: High Risk Fire Prediction
+  Input: latitude=28.6139, longitude=77.2090, wind_speed=30, veg_index=0.2
+  Expected: prediction=1, risk_level="High", probability > 0.7
+  Actual: prediction=1, risk_level="High", probability=0.98
+  Result: PASSED
+
+Test Case 2: Low Risk Fire Prediction
+  Input: latitude=20.5, longitude=78.9, wind_speed=5, veg_index=0.8
+  Expected: prediction=0, risk_level="Low", probability < 0.3
+  Actual: prediction=0, risk_level="Low", probability=0.06
+  Result: PASSED
+
+Test Case 3: Input Validation
+  Input: latitude=200 (invalid, exceeds -90 to 90 range)
+  Expected: 422 Unprocessable Entity with validation error
+  Actual: 422 with "Input should be less than or equal to 90"
+  Result: PASSED
+
+
+================================================================================
+
+                  11. IMPLEMENTATION & MAINTENANCE
+
+11.1 Deployment Architecture
+
+Figure 11: Deployment Architecture
+
++-------------------+     +-------------------+     +-------------------+
+|                   |     |                   |     |                   |
+|   GitHub          |     |   Render          |     |   MongoDB Atlas   |
+|   Repository      |---->|   (Backend)       |---->|   (Database)      |
+|                   |     |   - FastAPI        |     |   - M0 Free Tier  |
+|   Auto-deploy     |     |   - Python 3.11   |     |   - 512 MB        |
+|   on push to main |     |   - Free Tier     |     |   - SSL/TLS       |
+|                   |     +-------------------+     +-------------------+
+|                   |
+|                   |     +-------------------+
+|                   |---->|   Netlify         |
+|                   |     |   (Frontend)      |
++-------------------+     |   - React Build   |
+                          |   - Node 20       |
+                          |   - Global CDN    |
+                          +-------------------+
+
+
+11.2 Deployment Steps
+
+Backend Deployment (Render):
+1. Push code to GitHub repository
+2. Connect GitHub repo to Render Web Service
+3. Configure root directory as "backend"
+4. Set build command: pip install -r requirements.txt
+5. Set start command: uvicorn server:app --host 0.0.0.0 --port $PORT
+6. Add environment variables (MONGO_URL, DB_NAME, NASA_FIRMS_MAP_KEY,
+   RESEND_API_KEY, ALERT_EMAIL, SENDER_EMAIL)
+7. Deploy and verify at /api/ endpoint
+
+Frontend Deployment (Netlify):
+1. Connect GitHub repo to Netlify
+2. Set base directory as "frontend"
+3. Set build command: CI=false yarn build
+4. Set publish directory: frontend/build
+5. Add environment variable (REACT_APP_BACKEND_URL)
+6. Deploy and verify dashboard loads
+
+11.3 Environment Variables
+
+Table 16: Backend Environment Variables
+
++----+---------------------+---------------------------------------------------+
+| #  | Variable            | Description                                       |
++----+---------------------+---------------------------------------------------+
+| 1  | MONGO_URL           | MongoDB Atlas connection string (SRV format)      |
++----+---------------------+---------------------------------------------------+
+| 2  | DB_NAME             | Database name (fire_prediction_db)                |
++----+---------------------+---------------------------------------------------+
+| 3  | NASA_FIRMS_MAP_KEY  | NASA FIRMS API authentication key                 |
++----+---------------------+---------------------------------------------------+
+| 4  | RESEND_API_KEY      | Resend email service API key                      |
++----+---------------------+---------------------------------------------------+
+| 5  | ALERT_EMAIL         | Recipient email for fire alerts                   |
++----+---------------------+---------------------------------------------------+
+| 6  | SENDER_EMAIL        | Sender email address                              |
++----+---------------------+---------------------------------------------------+
+
+Table 17: Frontend Environment Variables
+
++----+-----------------------------+------------------------------------------+
+| #  | Variable                    | Description                              |
++----+-----------------------------+------------------------------------------+
+| 1  | REACT_APP_BACKEND_URL       | Render backend URL                       |
++----+-----------------------------+------------------------------------------+
+
+11.4 Maintenance Procedures
+
+a) Monitoring: Check Render and Netlify deployment logs regularly for errors.
+   Monitor MongoDB Atlas metrics for connection issues and storage usage.
+
+b) Updates: Push code changes to GitHub main branch for automatic
+   redeployment on both Render and Netlify via CI/CD pipeline.
+
+c) Database Maintenance: MongoDB Atlas handles backups automatically. The
+   live_fires collection is refreshed every 5 minutes, preventing unbounded
+   growth.
+
+d) API Key Rotation: Periodically rotate NASA FIRMS MAP_KEY and Resend API
+   key for security compliance.
+
+e) Cold Start Handling: Render free tier puts services to sleep after 15
+   minutes of inactivity. A health check endpoint (/api/) can be pinged
+   to keep the service warm.
+
+
+================================================================================
+
+                  12. CONCLUSION AND FUTURE WORK
+
+12.1 Conclusion
+
+The Fire Prediction System has been successfully developed, tested, and
+deployed as a full-stack web application that addresses the critical need
+for wildfire prediction and monitoring in India. The project achieves all
+six stated objectives:
+
+1. A Random Forest machine learning model was trained and deployed for
+   fire risk prediction, achieving accurate classification of fire risk
+   into Low, Medium, and High categories based on geographic coordinates,
+   wind speed, and vegetation index.
+
+2. Real-time satellite fire data from NASA FIRMS (VIIRS SNPP sensor) was
+   successfully integrated, processing over 11,000 active fire hotspots
+   across the Indian subcontinent per update cycle.
+
+3. An interactive geospatial dashboard was built using React.js and
+   Leaflet, featuring a dark command center theme with real-time map
+   visualization, live fire feed, and analytics charts.
+
+4. A fire incident reporting system was implemented, allowing users to
+   submit reports that are stored in MongoDB and broadcast to all
+   connected clients via WebSocket.
+
+5. Automated email alerts via Resend API notify administrators when
+   Medium or High risk fires are predicted, including location details
+   and Google Maps links.
+
+6. The application was successfully deployed on Render (backend) and
+   Netlify (frontend) with MongoDB Atlas as the cloud database, achieving
+   100% test pass rate across 14 test cases.
+
+The project demonstrates the practical application of machine learning,
+real-time data processing, WebSocket communication, and cloud-native
+architecture for environmental monitoring and disaster prevention.
+
+12.2 Future Work
+
+The following enhancements are planned for future iterations:
+
+a) Advanced ML Models: Replace the current Random Forest with ensemble
+   methods (XGBoost, LightGBM) or deep learning models (LSTM for temporal
+   fire prediction) trained on comprehensive Kaggle wildfire datasets.
+
+b) Weather Data Integration: Incorporate real-time weather data
+   (temperature, humidity, precipitation) from OpenWeatherMap API for
+   more accurate predictions.
+
+c) SMS Alert System: Add Twilio integration for SMS notifications to
+   reach responders in areas with limited internet connectivity.
+
+d) User Authentication: Implement JWT-based authentication for
+   personalized prediction history and role-based access control.
+
+e) Mobile Application: Develop a React Native mobile app for field
+   responders to access fire data and report incidents on the go.
+
+f) Multi-Region Support: Extend the system beyond India to cover
+   other fire-prone regions (Australia, California, Mediterranean).
+
+g) Satellite Imagery Overlay: Integrate satellite imagery tiles to
+   provide visual context for fire detection markers on the map.
+
+h) Predictive Analytics: Implement time-series forecasting to predict
+   fire seasons and high-risk periods based on historical data.
+
+
+================================================================================
+
+                         13. OUTCOME
+
+The Fire Prediction System has been successfully deployed as a production-
+ready web application accessible at:
+- Frontend: https://infernoforecastpro.netlify.app
+- Backend API: https://fire-prediction-system.onrender.com
+- GitHub: https://github.com/mehaklaha/Fire-Prediction-System
+
+The system demonstrates successful integration of machine learning, real-time
+satellite data (NASA FIRMS), and modern web technologies (FastAPI, React,
+MongoDB) for environmental monitoring. All features are operational with
+100% test pass rate.
+
+
+================================================================================
+
+                        14. BIBLIOGRAPHY
+
+[1] Forest Survey of India, "India State of Forest Report 2021," Ministry of
+    Environment, Forest and Climate Change, Government of India, 2021.
+
+[2] Jain, P., Coogan, S.C., Subramanian, S.G., Crowley, M., Taylor, S.
+    and Flannigan, M.D. (2020). "A review of machine learning applications
+    in wildfire science and management." Environmental Reviews, 28(4),
+    478-505.
+
+[3] Breiman, L. (2001). "Random Forests." Machine Learning, 45(1), 5-32.
+    Springer, New York.
+
+[4] NASA. (2024). "Fire Information for Resource Management System (FIRMS)."
+    NASA FIRMS, https://firms.modaps.eosdis.nasa.gov/ (Apr. 12, 2026).
+
+[5] Fette, I. and Melnikov, A. (2011). "The WebSocket Protocol." RFC 6455,
+    Internet Engineering Task Force.
+
+[6] Tiangolo, S. (2024). "FastAPI - Modern web framework for building APIs
+    with Python." FastAPI Documentation, https://fastapi.tiangolo.com/
+    (Apr. 10, 2026).
+
+[7] MongoDB Inc. (2024). "MongoDB Documentation." MongoDB Manual,
+    https://www.mongodb.com/docs/ (Apr. 10, 2026).
+
+[8] Facebook Inc. (2024). "React - A JavaScript library for building user
+    interfaces." React Documentation, https://react.dev/ (Apr. 10, 2026).
+
+[9] Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B.,
+    Grisel, O. and Duchesnay, E. (2011). "Scikit-learn: Machine Learning in
+    Python." Journal of Machine Learning Research, 12, 2825-2830.
+
+[10] Agafonkin, V. (2024). "Leaflet - An open-source JavaScript library for
+     interactive maps." Leaflet Documentation, https://leafletjs.com/
+     (Apr. 10, 2026).
+
+[11] Giglio, L., Schroeder, W. and Justice, C.O. (2016). "The collection 6
+     MODIS active fire detection algorithm and fire products." Remote Sensing
+     of Environment, 178, 31-41.
+
+[12] Render Inc. (2024). "Render - Cloud Application Platform." Render
+     Documentation, https://render.com/docs (Apr. 12, 2026).
+
+[13] Netlify Inc. (2024). "Netlify - Web Development Platform." Netlify
+     Documentation, https://docs.netlify.com/ (Apr. 12, 2026).
+
+[14] Didan, K. (2015). "MOD13Q1 MODIS/Terra Vegetation Indices 16-Day L3
+     Global 250m SIN Grid V006." NASA EOSDIS Land Processes DAAC.
+
+[15] Resend Inc. (2024). "Resend - Email for Developers." Resend
+     Documentation, https://resend.com/docs (Apr. 12, 2026).
+
+
+================================================================================
+
+                          END OF REPORT
+
+================================================================================
